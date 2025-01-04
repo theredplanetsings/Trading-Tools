@@ -16,7 +16,7 @@ This repository contains Python programs to produce a correlational heatmap, cal
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/Trading-Tools.git
+   git clone https://github.com/theredplanetsings/Trading-Tools.git
    cd Trading-Tools
 
 2. Install the required packages:
