@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 __author__ = "https://github.com/theredplanetsings"
-__date__ = "04/01/2024"
+__date__ = "04/01/2025"
 
 # list of stock tickers
 stock_tickers = [
