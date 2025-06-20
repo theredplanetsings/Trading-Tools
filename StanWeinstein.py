@@ -4,7 +4,7 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 
 __author__ = "https://github.com/theredplanetsings"
-__date__ = "04/01/2024"
+__date__ = "04/01/2025"
 
 class StanWeinsteinTester():
     """
