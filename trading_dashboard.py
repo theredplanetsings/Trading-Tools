@@ -10,6 +10,9 @@ from datetime import datetime, date
 import warnings
 warnings.filterwarnings('ignore')
 
+__author__ = "https://github.com/theredplanetsings"
+__date__ = "04/07/2025"
+
 # Import your existing classes with error handling
 try:
     from StanWeinstein import StanWeinsteinTester
