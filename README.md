@@ -4,7 +4,7 @@ A comprehensive Streamlit web application for trading analysis and strategy back
 
 ## Live Webapp
 
-**[View Live Application](https://tradingtools.streamlit.app/)**
+**[https://tradingtools.streamlit.app/](https://tradingtools.streamlit.app/)**
 
 ## Features
 
