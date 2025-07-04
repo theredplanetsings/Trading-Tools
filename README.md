@@ -1,53 +1,113 @@
-# Trading-Tools
+# Trading Tools Dashboard
 
-This repository contains Python programs to produce a correlational heatmap, calculate the risk vs reward of a given list of stocks, and backtest both a short & long-term moving average strategy and Stan Weinstein's strategy against a buying & holding strategy.
+A comprehensive Streamlit web application for trading analysis and strategy backtesting. This dashboard integrates multiple powerful trading tools into a single, interactive platform.
 
-## Table of Contents
-- [Installation](#installation)
-- [Usage](#usage)
-  - [StanWeinstein.py](#stanweinsteinpy)
-  - [riskvsreward.py](#riskvsrewardpy)
-  - [mySMAbacktesting.py](#mysmabacktestingpy)
-  - [correlationHeatMap.py](#correlationheatmappy)
-- [Contributing](#contributing)
-- [License](#license)
+## Live Demo
 
-## Installation
+[Deploy your own on Streamlit Cloud](https://streamlit.io/cloud)
 
-1. Clone the repository:
+## Features
+
+- **Stan Weinstein Strategy**: Backtest the famous 30-week moving average strategy
+- **SMA Backtesting**: Test short vs long-term moving average crossover strategies  
+- **Risk vs Reward Analysis**: Analyse risk-return profiles of multiple stocks
+- **Correlation Heatmap**: Visualise correlations between different stocks
+- **Interactive Charts**: Beautiful, interactive plots powered by Plotly
+- **Real-time Data**: Live stock data from Yahoo Finance
+
+## Installation and Setup
+
+1. **Clone the repository:**
    ```bash
-   git clone https://github.com/theredplanetsings/Trading-Tools.git
+   git clone https://github.com/yourusername/Trading-Tools.git
    cd Trading-Tools
+   ```
 
-2. Install the required packages:
-    ```bash
-    pip install requirements.txt
+2. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-# Usage
+3. **Run the dashboard:**
+   ```bash
+   streamlit run trading_dashboard.py
+   ```
 
-### `StanWeinstein.py`
+4. **Open your browser** to `http://localhost:8501`
 
-This script backtests Stan Weinstein's strategy against a buying & holding strategy
+## Dependencies
 
-**Instructions**
+- `streamlit` - Web app framework
+- `pandas` - Data manipulation
+- `numpy` - Numerical computing
+- `yfinance` - Stock data
+- `plotly` - Interactive charts
+- `matplotlib` - Additional plotting
+- `seaborn` - Statistical visualisation
 
-1. Open the StanWeinstein.py file.
-2. Modify the test_case() function to specify the stock symbol, start date, and end date.
-3. Run the script to see the backtest results and plot
+## Usage
 
-### `mySMAbacktesting.py`
+### Stan Weinstein Strategy
+1. Enter a stock symbol (e.g., AAPL, TSLA)
+2. Select your date range
+3. Click "Run Analysis" to see strategy performance vs buy & hold
 
-This script backtests a short & long-term moving average strategy against a buying & holding strategy.
+### SMA Backtesting
+1. Enter stock symbol and moving average periods
+2. Choose date range
+3. View performance comparison and trading signals
 
-**Instructions**
+### Risk vs Reward
+1. Enter multiple stock symbols (one per line)
+2. Set analysis period
+3. Explore risk-return scatter plot and statistics
 
-1. Open the mySMAbacktesting.py file.
-2. Modify the test_case() function to specify the stock symbol, short-term SMA period, long-term SMA period, start date, and end date.
-3. Run the script to see the backtest results and plot.
+### Correlation Analysis
+1. Input stock symbols for correlation analysis
+2. Adjust correlation threshold
+3. View heatmap and diversification insights
 
-### `riskvsreward.py`
+## Deployment
 
-This script calculates the risk vs reward of a given list of stocks.
+### Streamlit Cloud (Recommended)
+1. Upload files to GitHub
+2. Connect repository to [Streamlit Cloud](https://streamlit.io/cloud)
+3. Deploy automatically
+
+### Required Files for Deployment:
+- `trading_dashboard.py`
+- `StanWeinstein.py`
+- `mySMAbacktesting.py`  
+- `requirements.txt`
+- `README.md`
+
+## Screenshots
+
+![Dashboard Home](https://via.placeholder.com/800x400?text=Dashboard+Home)
+![Strategy Analysis](https://via.placeholder.com/800x400?text=Strategy+Analysis)
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## Licence
+
+This project is licensed under the MIT Licence - see the [LICENSE](LICENSE) file for details.
+
+## Author
+
+**Chris Rutherford**
+- GitHub: [@theredplanetsings](https://github.com/theredplanetsings)
+
+## Acknowledgements
+
+- Yahoo Finance for providing free stock data
+- Streamlit team for the amazing framework
+- Plotly for interactive visualisations
 
 **Instructions**
 
