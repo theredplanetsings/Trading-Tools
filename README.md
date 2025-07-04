@@ -119,10 +119,6 @@ This script produces a correlational heatmap for a given list of stocks.
 2. Modify the stocks, start, and end variables to specify the list of stocks and the date range.
 3. Run the script to see the correlation heatmap.
 
-# Contributing
-
-Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
-
 # License
 
 This project is licensed under the Creative Commons Zero v1.0 Universal. See the LICENSE file for details.
