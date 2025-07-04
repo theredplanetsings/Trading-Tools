@@ -2,9 +2,9 @@
 
 A comprehensive Streamlit web application for trading analysis and strategy backtesting. This dashboard integrates multiple powerful trading tools into a single, interactive platform.
 
-## Live Demo
+## Live Webapp
 
-[Deploy your own on Streamlit Cloud](https://streamlit.io/cloud)
+**[View Live Application](https://tradingtools.streamlit.app/)**
 
 ## Features
 
@@ -19,7 +19,7 @@ A comprehensive Streamlit web application for trading analysis and strategy back
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/Trading-Tools.git
+   git clone https://github.com/theredplanetsings/Trading-Tools.git
    cd Trading-Tools
    ```
 
@@ -81,11 +81,6 @@ A comprehensive Streamlit web application for trading analysis and strategy back
 - `requirements.txt`
 - `README.md`
 
-## Screenshots
-
-![Dashboard Home](https://via.placeholder.com/800x400?text=Dashboard+Home)
-![Strategy Analysis](https://via.placeholder.com/800x400?text=Strategy+Analysis)
-
 ## Contributing
 
 1. Fork the repository
@@ -100,7 +95,6 @@ This project is licensed under the MIT Licence - see the [LICENSE](LICENSE) file
 
 ## Author
 
-**Chris Rutherford**
 - GitHub: [@theredplanetsings](https://github.com/theredplanetsings)
 
 ## Acknowledgements
