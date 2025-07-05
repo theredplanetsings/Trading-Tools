@@ -24,7 +24,7 @@ class SMABacktester():
         The end date for the historical data.
     results : DataFrame
         The DataFrame containing the backtest results.
-
+        
     Methods
     -------
     get_data():
@@ -37,7 +37,7 @@ class SMABacktester():
     def __init__(self, symbol, SMA_S, SMA_L, start, end):
         """
         Constructs all the necessary attributes for the SMABacktester object.
-
+        
         Parameters
         ----------
         symbol : str
@@ -75,7 +75,6 @@ class SMABacktester():
         data = pd.DataFrame(df['Close'])
         # calculate daily logarithmic returns
         data['returns'] = np.log(df['Close'].div(data['Close'].shift(1)))
-
         # shorter-term moving average (SMA_S)
         data['SMA_S'] = df['Close'].rolling(int(self.SMA_S)).mean()
         # longer-term moving average (SMA_L)
