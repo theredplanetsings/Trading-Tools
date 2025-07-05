@@ -19,7 +19,6 @@ try:
 except ImportError:
     st.error("StanWeinstein module not found. Please ensure all files are in the same directory.")
     StanWeinsteinTester = None
-
 try:
     from mySMAbacktesting import SMABacktester
 except ImportError:
