@@ -32,7 +32,6 @@ stock_tickers = [
 
 # sorts tickers alphabetically
 tickers_sorted = sorted(stock_tickers)
-
 # downloads stock data across a given date range
 stocks = yf.download(tickers_sorted, start = "2020-01-01", end = "2023-01-01")['Adj Close']
 
