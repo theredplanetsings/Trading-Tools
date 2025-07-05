@@ -8,8 +8,8 @@ __date__ = "04/01/2025"
 
 class StanWeinsteinTester():
     """
-    A class to backtest Stan Weinstein's strategy against a buying & holding strategy.
-
+    A class for backtesting Stan Weinstein's strategy against a buying & holding strategy.
+    
     Attributes
     ----------
     symbol : str
