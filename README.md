@@ -2,7 +2,7 @@
 
 Streamlit web app for trading analysis and strategy backtesting. Dashboard integrates multiple trading tools into a single platform.
 
-## Live Webapp
+## Live Site
 
 **[https://tradingtools.streamlit.app/](https://tradingtools.streamlit.app/)**
 
