@@ -215,10 +215,11 @@ if page == "Home":
                     else:
                         st.error(f"No price data found. Available columns: {list(raw_data.columns)}")
                 else:
-                    # Multiple symbols case - handle MultiIndex columns
+                    # Multiple symbols case - handle different column structures
                     symbol_data_dict = {}
                     try:
                         if isinstance(raw_data.columns, pd.MultiIndex):
+                            # MultiIndex case (symbol, metric)
                             available_columns = raw_data.columns.get_level_values(1).unique()
                             if 'Adj Close' in available_columns:
                                 price_data = raw_data.xs('Adj Close', level=1, axis=1)
@@ -226,13 +227,19 @@ if page == "Home":
                                 price_data = raw_data.xs('Close', level=1, axis=1)
                             else:
                                 st.error(f"No price columns found. Available columns: {list(available_columns)}")
+                                price_data = None
                             
                             # Extract data for each symbol
-                            for symbol in major_indices:
-                                if symbol in price_data.columns:
-                                    symbol_data_dict[symbol] = price_data[symbol]
+                            if price_data is not None:
+                                for symbol in major_indices:
+                                    if symbol in price_data.columns:
+                                        symbol_data_dict[symbol] = price_data[symbol]
                         else:
-                            st.error(f"Unexpected data structure. Columns: {list(raw_data.columns)}")
+                            # Flat columns case - yfinance sometimes returns just symbol names when downloading adjusted close
+                            # In this case, each column is already the close price for that symbol
+                            for symbol in major_indices:
+                                if symbol in raw_data.columns:
+                                    symbol_data_dict[symbol] = raw_data[symbol]
                     except Exception as e:
                         st.error(f"Error processing multi-symbol data: {str(e)}")
                 
@@ -240,8 +247,6 @@ if page == "Home":
                 for i, symbol in enumerate(major_indices):
                     with cols[i]:
                         try:
-                            if symbol in symbol_data_dict:
-                                symbol_data = symbol_data_dict[symbol].dropna()
                             if symbol in symbol_data_dict:
                                 symbol_data = symbol_data_dict[symbol].dropna()
                                 
