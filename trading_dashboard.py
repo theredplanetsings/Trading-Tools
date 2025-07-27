@@ -654,6 +654,11 @@ elif page == "Risk vs Reward":
                         
                         # Handle different data structures from yfinance
                         try:
+                            # Debug info for Risk vs Reward
+                            st.info(f"Raw data columns: {list(raw_data.columns)}")
+                            st.info(f"Stock list: {stock_list}")
+                            st.info(f"Is MultiIndex: {isinstance(raw_data.columns, pd.MultiIndex)}")
+                            
                             # Try to get Adj Close first, then Close
                             if isinstance(raw_data.columns, pd.MultiIndex):
                                 # Multiple stocks with MultiIndex columns
@@ -666,11 +671,13 @@ elif page == "Risk vs Reward":
                                     st.error(f"No price columns found. Available columns: {list(available_columns)}")
                                     st.stop()
                             else:
-                                # Flat columns - check if columns are stock symbols
+                                # Flat columns - check if columns are stock symbols first
                                 symbols_found = [symbol for symbol in stock_list if symbol in raw_data.columns]
+                                st.info(f"Symbols found in columns: {symbols_found}")
                                 if len(symbols_found) > 0:
                                     # Columns are symbol names, data is the adjusted close
                                     stocks = raw_data[symbols_found]
+                                    st.success(f"Using {len(symbols_found)} symbols as column names")
                                 elif 'Adj Close' in raw_data.columns:
                                     stocks = raw_data[['Adj Close']]
                                     stocks.columns = stock_list
@@ -679,6 +686,7 @@ elif page == "Risk vs Reward":
                                     stocks.columns = stock_list
                                 else:
                                     st.error(f"No price columns found. Available columns: {list(raw_data.columns)}")
+                                    st.error(f"Expected symbols: {stock_list}")
                                     st.stop()
                         except Exception as e:
                             st.error(f"Error processing data structure: {str(e)}")
