@@ -733,7 +733,10 @@ elif page == "Risk vs Reward":
                         summary = returns.describe().T.loc[:, ["mean", "std"]]
                         summary["mean"] = summary["mean"] * 252  # Annualize
                         summary["std"] = summary["std"] * np.sqrt(252)  # Annualize
-                        summary["sharpe"] = summary["mean"] / summary["std"]  # Sharpe ratio
+                        
+                        # Calculate Sharpe ratio with risk-free rate of 0 (can be adjusted)
+                        # Handle division by zero for very low volatility stocks
+                        summary["sharpe"] = np.where(summary["std"] > 0, summary["mean"] / summary["std"], 0)
                         
                         # Store in session state
                         st.session_state['risk_summary'] = summary
@@ -781,20 +784,50 @@ elif page == "Risk vs Reward":
             summary_display = summary.copy()
             summary_display['mean'] = summary_display['mean'].apply(lambda x: f"{x:.2%}")
             summary_display['std'] = summary_display['std'].apply(lambda x: f"{x:.2%}")
-            summary_display['sharpe'] = summary_display['sharpe'].round(3)
+            summary_display['sharpe'] = summary_display['sharpe'].apply(lambda x: f"{x:.3f}")
             summary_display.columns = ['Annual Return', 'Annual Risk', 'Sharpe Ratio']
             
             # Color coding based on Sharpe ratio
             def color_sharpe(val):
-                if val > 1:
-                    return 'background-color: #d4edda'  # Green
-                elif val > 0.5:
-                    return 'background-color: #fff3cd'  # Yellow
-                else:
-                    return 'background-color: #f8d7da'  # Red
+                try:
+                    # Extract numeric value from formatted string
+                    numeric_val = float(val)
+                    if numeric_val > 1:
+                        return 'background-color: #d4edda; color: #155724; font-weight: bold;'  # Green
+                    elif numeric_val > 0.5:
+                        return 'background-color: #fff3cd; color: #856404; font-weight: bold;'  # Yellow
+                    elif numeric_val > 0:
+                        return 'background-color: #f8d7da; color: #721c24; font-weight: bold;'  # Light Red
+                    else:
+                        return 'background-color: #dc3545; color: white; font-weight: bold;'  # Dark Red
+                except:
+                    return ''
             
+            # Style the dataframe
             styled_df = summary_display.style.applymap(color_sharpe, subset=['Sharpe Ratio'])
+            
+            # Add some custom CSS to make the table more readable
+            styled_df = styled_df.format({
+                'Annual Return': lambda x: x,
+                'Annual Risk': lambda x: x,
+                'Sharpe Ratio': lambda x: x
+            })
+            
             st.dataframe(styled_df, use_container_width=True)
+            
+            # Add interpretation guide
+            st.markdown("#### Sharpe Ratio Interpretation")
+            col_guide1, col_guide2, col_guide3, col_guide4 = st.columns(4)
+            with col_guide1:
+                st.markdown("🟢 **Excellent** (>1.0)")
+            with col_guide2:
+                st.markdown("🟡 **Good** (0.5-1.0)")
+            with col_guide3:
+                st.markdown("🟠 **Fair** (0.0-0.5)")
+            with col_guide4:
+                st.markdown("🔴 **Poor** (<0.0)")
+            
+            st.caption("Sharpe Ratio measures risk-adjusted returns. Higher values indicate better risk-adjusted performance.")
             
         else:
             st.info("Run an analysis to see the risk vs reward chart and statistics")
