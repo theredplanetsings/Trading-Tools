@@ -204,53 +204,74 @@ if page == "Home":
                 cols = st.columns(len(major_indices))
                 
                 # Handle different data structures from yfinance more robustly
-                if len(major_indices) == 1:
-                    # Single symbol case - data comes with flat columns
-                    symbol_data_dict = {}
-                    symbol = major_indices[0]
-                    if 'Adj Close' in raw_data.columns:
-                        symbol_data_dict[symbol] = raw_data['Adj Close']
-                    elif 'Close' in raw_data.columns:
-                        symbol_data_dict[symbol] = raw_data['Close']
-                    else:
-                        st.error(f"No price data found. Available columns: {list(raw_data.columns)}")
-                else:
-                    # Multiple symbols case - handle different column structures
-                    symbol_data_dict = {}
-                    try:
+                symbol_data_dict = {}
+                
+                try:
+                    if len(major_indices) == 1:
+                        # Single symbol case
+                        symbol = major_indices[0]
                         if isinstance(raw_data.columns, pd.MultiIndex):
-                            # MultiIndex case (symbol, metric)
-                            available_columns = raw_data.columns.get_level_values(1).unique()
-                            if 'Adj Close' in available_columns:
-                                price_data = raw_data.xs('Adj Close', level=1, axis=1)
-                            elif 'Close' in available_columns:
-                                price_data = raw_data.xs('Close', level=1, axis=1)
-                            else:
-                                st.error(f"No price columns found. Available columns: {list(available_columns)}")
-                                price_data = None
-                            
-                            # Extract data for each symbol
-                            if price_data is not None:
-                                for symbol in major_indices:
-                                    if symbol in price_data.columns:
-                                        symbol_data_dict[symbol] = price_data[symbol]
+                            # MultiIndex case for single symbol
+                            if 'Adj Close' in raw_data.columns.get_level_values(1):
+                                symbol_data_dict[symbol] = raw_data[('Adj Close', symbol)] if (('Adj Close', symbol)) in raw_data.columns else raw_data.xs('Adj Close', level=1, axis=1).iloc[:, 0]
+                            elif 'Close' in raw_data.columns.get_level_values(1):
+                                symbol_data_dict[symbol] = raw_data[('Close', symbol)] if (('Close', symbol)) in raw_data.columns else raw_data.xs('Close', level=1, axis=1).iloc[:, 0]
                         else:
-                            # Flat columns case - check if columns are symbol names (common with yfinance)
-                            # If we have symbol names as columns, it means yfinance returned adjusted close by default
-                            symbols_found = [symbol for symbol in major_indices if symbol in raw_data.columns]
-                            if len(symbols_found) > 0:
-                                # Columns are symbol names, data is the adjusted close
-                                for symbol in symbols_found:
-                                    symbol_data_dict[symbol] = raw_data[symbol]
-                            else:
-                                # Try traditional column names as fallback
+                            # Flat columns for single symbol
+                            if 'Adj Close' in raw_data.columns:
+                                symbol_data_dict[symbol] = raw_data['Adj Close']
+                            elif 'Close' in raw_data.columns:
+                                symbol_data_dict[symbol] = raw_data['Close']
+                            elif symbol in raw_data.columns:
+                                # Symbol name is the column (yfinance sometimes returns this way)
+                                symbol_data_dict[symbol] = raw_data[symbol]
+                    else:
+                        # Multiple symbols case
+                        if isinstance(raw_data.columns, pd.MultiIndex):
+                            # MultiIndex case (metric, symbol) or (symbol, metric)
+                            level_0_values = raw_data.columns.get_level_values(0).unique()
+                            level_1_values = raw_data.columns.get_level_values(1).unique()
+                            
+                            # Check if level 0 contains price columns or symbols
+                            if 'Adj Close' in level_0_values:
+                                # Format: (metric, symbol)
                                 for symbol in major_indices:
-                                    if symbol in raw_data.columns:
-                                        symbol_data_dict[symbol] = raw_data[symbol]
-                                if not symbol_data_dict:
-                                    st.error(f"No matching symbols found. Requested: {major_indices}, Available: {list(raw_data.columns)}")
-                    except Exception as e:
-                        st.error(f"Error processing multi-symbol data: {str(e)}")
+                                    if ('Adj Close', symbol) in raw_data.columns:
+                                        symbol_data_dict[symbol] = raw_data[('Adj Close', symbol)]
+                            elif 'Close' in level_0_values:
+                                # Format: (metric, symbol)
+                                for symbol in major_indices:
+                                    if ('Close', symbol) in raw_data.columns:
+                                        symbol_data_dict[symbol] = raw_data[('Close', symbol)]
+                            elif 'Adj Close' in level_1_values:
+                                # Format: (symbol, metric)
+                                for symbol in major_indices:
+                                    if (symbol, 'Adj Close') in raw_data.columns:
+                                        symbol_data_dict[symbol] = raw_data[(symbol, 'Adj Close')]
+                            elif 'Close' in level_1_values:
+                                # Format: (symbol, metric)
+                                for symbol in major_indices:
+                                    if (symbol, 'Close') in raw_data.columns:
+                                        symbol_data_dict[symbol] = raw_data[(symbol, 'Close')]
+                        else:
+                            # Flat columns case - symbols are column names
+                            for symbol in major_indices:
+                                if symbol in raw_data.columns:
+                                    symbol_data_dict[symbol] = raw_data[symbol]
+                    
+                    # If we still don't have data, log the structure for debugging
+                    if not symbol_data_dict:
+                        st.error(f"Could not extract price data. Data structure:")
+                        st.error(f"Columns: {list(raw_data.columns)}")
+                        st.error(f"MultiIndex: {isinstance(raw_data.columns, pd.MultiIndex)}")
+                        if isinstance(raw_data.columns, pd.MultiIndex):
+                            st.error(f"Level 0: {raw_data.columns.get_level_values(0).unique().tolist()}")
+                            st.error(f"Level 1: {raw_data.columns.get_level_values(1).unique().tolist()}")
+                        
+                except Exception as e:
+                    st.error(f"Error processing market data: {str(e)}")
+                    st.error(f"Raw data columns: {list(raw_data.columns)}")
+                    st.error(f"Requested symbols: {major_indices}")
                 
                 # Display data for each symbol
                 for i, symbol in enumerate(major_indices):
