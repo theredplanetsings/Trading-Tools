@@ -242,7 +242,6 @@ if page == "Home":
                                 # Columns are symbol names, data is the adjusted close
                                 for symbol in symbols_found:
                                     symbol_data_dict[symbol] = raw_data[symbol]
-                                st.success(f"Found {len(symbols_found)} symbols: {symbols_found}")  # Debug info
                             else:
                                 # Try traditional column names as fallback
                                 for symbol in major_indices:
@@ -667,8 +666,12 @@ elif page == "Risk vs Reward":
                                     st.error(f"No price columns found. Available columns: {list(available_columns)}")
                                     st.stop()
                             else:
-                                # Single stock or flat column structure
-                                if 'Adj Close' in raw_data.columns:
+                                # Flat columns - check if columns are stock symbols
+                                symbols_found = [symbol for symbol in stock_list if symbol in raw_data.columns]
+                                if len(symbols_found) > 0:
+                                    # Columns are symbol names, data is the adjusted close
+                                    stocks = raw_data[symbols_found]
+                                elif 'Adj Close' in raw_data.columns:
                                     stocks = raw_data[['Adj Close']]
                                     stocks.columns = stock_list
                                 elif 'Close' in raw_data.columns:
@@ -846,8 +849,12 @@ elif page == "Correlation Heatmap":
                                     st.error(f"No price columns found. Available columns: {list(available_columns)}")
                                     st.stop()
                             else:
-                                # Single stock or flat column structure
-                                if 'Adj Close' in raw_data.columns:
+                                # Flat columns - check if columns are stock symbols
+                                symbols_found = [symbol for symbol in stock_list if symbol in raw_data.columns]
+                                if len(symbols_found) > 0:
+                                    # Columns are symbol names, data is the adjusted close
+                                    stocks = raw_data[symbols_found]
+                                elif 'Adj Close' in raw_data.columns:
                                     stocks = raw_data[['Adj Close']]
                                     stocks.columns = stock_list
                                 elif 'Close' in raw_data.columns:
