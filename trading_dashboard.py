@@ -127,33 +127,47 @@ if page == "Home":
     try:
         with st.spinner("Loading market data..."):
             # Download current and previous day data
-            data = yf.download(major_indices, period="5d", interval="1d")['Close']
+            raw_data = yf.download(major_indices, period="5d", interval="1d", group_by='ticker')
             
-            if data.empty:
+            if raw_data.empty:
                 st.warning("Unable to fetch market data at this time")
             else:
-                # Get the last two trading days
-                current_prices = data.iloc[-1]
-                previous_prices = data.iloc[-2]
-                
                 cols = st.columns(len(major_indices))
                 for i, symbol in enumerate(major_indices):
                     with cols[i]:
-                        if symbol in current_prices.index and symbol in previous_prices.index:
-                            current_price = current_prices[symbol]
-                            prev_price = previous_prices[symbol]
-                            change = current_price - prev_price
-                            change_pct = (change / prev_price) * 100
+                        try:
+                            # Handle different data structures from yfinance
+                            if len(major_indices) == 1:
+                                # Single symbol case
+                                symbol_data = raw_data['Close'] if 'Close' in raw_data.columns else raw_data['Adj Close']
+                            else:
+                                # Multiple symbols case
+                                symbol_data = raw_data[symbol]['Close'] if 'Close' in raw_data[symbol].columns else raw_data[symbol]['Adj Close']
                             
-                            color = "success-metric" if change >= 0 else "danger-metric"
-                            st.markdown(f"""
-                            <div class="metric-card {color}">
-                                <h4>{symbol}</h4>
-                                <p><strong>${current_price:.2f}</strong></p>
-                                <p>{change:+.2f} ({change_pct:+.2f}%)</p>
-                            </div>
-                            """, unsafe_allow_html=True)
-                        else:
+                            # Get the last two trading days
+                            symbol_data = symbol_data.dropna()
+                            if len(symbol_data) >= 2:
+                                current_price = symbol_data.iloc[-1]
+                                prev_price = symbol_data.iloc[-2]
+                                change = current_price - prev_price
+                                change_pct = (change / prev_price) * 100
+                                
+                                color = "success-metric" if change >= 0 else "danger-metric"
+                                st.markdown(f"""
+                                <div class="metric-card {color}">
+                                    <h4>{symbol}</h4>
+                                    <p><strong>${current_price:.2f}</strong></p>
+                                    <p>{change:+.2f} ({change_pct:+.2f}%)</p>
+                                </div>
+                                """, unsafe_allow_html=True)
+                            else:
+                                st.markdown(f"""
+                                <div class="metric-card">
+                                    <h4>{symbol}</h4>
+                                    <p><strong>Insufficient data</strong></p>
+                                </div>
+                                """, unsafe_allow_html=True)
+                        except Exception as symbol_error:
                             st.markdown(f"""
                             <div class="metric-card">
                                 <h4>{symbol}</h4>
@@ -500,17 +514,42 @@ elif page == "Risk vs Reward":
             else:
                 with st.spinner("Downloading data and calculating metrics..."):
                     try:
-                        # Download stock data
-                        stocks = yf.download(stock_list, start=start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))['Adj Close']
+                        # Download stock data with more robust error handling
+                        raw_data = yf.download(stock_list, start=start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))
                         
-                        if stocks.empty:
+                        if raw_data.empty:
                             st.error("No data found for the specified stocks and date range")
                             st.stop()
                         
-                        # Handle single stock case
+                        # Handle different data structures from yfinance
                         if len(stock_list) == 1:
-                            stocks = stocks.to_frame()
+                            # Single stock case
+                            if 'Adj Close' in raw_data.columns:
+                                stocks = raw_data['Adj Close'].to_frame()
+                            elif 'Close' in raw_data.columns:
+                                stocks = raw_data['Close'].to_frame()
+                            else:
+                                st.error("No price data found")
+                                st.stop()
                             stocks.columns = stock_list
+                        else:
+                            # Multiple stocks case
+                            if ('Adj Close' in raw_data.columns.get_level_values(1) if isinstance(raw_data.columns, pd.MultiIndex) 
+                                else 'Adj Close' in raw_data.columns):
+                                stocks = raw_data['Adj Close'] if isinstance(raw_data.columns, pd.MultiIndex) else raw_data[['Adj Close']]
+                            elif ('Close' in raw_data.columns.get_level_values(1) if isinstance(raw_data.columns, pd.MultiIndex) 
+                                  else 'Close' in raw_data.columns):
+                                stocks = raw_data['Close'] if isinstance(raw_data.columns, pd.MultiIndex) else raw_data[['Close']]
+                            else:
+                                st.error("No price data found")
+                                st.stop()
+                        
+                        # Remove any NaN columns/stocks
+                        stocks = stocks.dropna(axis=1, how='all')
+                        
+                        if stocks.empty:
+                            st.error("No valid data found for the specified stocks and date range")
+                            st.stop()
                         
                         # Calculate daily returns
                         returns = stocks.pct_change().dropna()
@@ -649,11 +688,41 @@ elif page == "Correlation Heatmap":
             else:
                 with st.spinner("Downloading data and calculating correlations..."):
                     try:
-                        # Download stock data
-                        stocks = yf.download(stock_list, start=start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))['Adj Close']
+                        # Download stock data with more robust error handling
+                        raw_data = yf.download(stock_list, start=start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))
                         
-                        if stocks.empty:
+                        if raw_data.empty:
                             st.error("No data found for the specified stocks and date range")
+                            st.stop()
+                        
+                        # Handle different data structures from yfinance
+                        if len(stock_list) == 1:
+                            # Single stock case
+                            if 'Adj Close' in raw_data.columns:
+                                stocks = raw_data['Adj Close'].to_frame()
+                            elif 'Close' in raw_data.columns:
+                                stocks = raw_data['Close'].to_frame()
+                            else:
+                                st.error("No price data found")
+                                st.stop()
+                            stocks.columns = stock_list
+                        else:
+                            # Multiple stocks case
+                            if ('Adj Close' in raw_data.columns.get_level_values(1) if isinstance(raw_data.columns, pd.MultiIndex) 
+                                else 'Adj Close' in raw_data.columns):
+                                stocks = raw_data['Adj Close'] if isinstance(raw_data.columns, pd.MultiIndex) else raw_data[['Adj Close']]
+                            elif ('Close' in raw_data.columns.get_level_values(1) if isinstance(raw_data.columns, pd.MultiIndex) 
+                                  else 'Close' in raw_data.columns):
+                                stocks = raw_data['Close'] if isinstance(raw_data.columns, pd.MultiIndex) else raw_data[['Close']]
+                            else:
+                                st.error("No price data found")
+                                st.stop()
+                        
+                        # Remove any NaN columns/stocks
+                        stocks = stocks.dropna(axis=1, how='all')
+                        
+                        if stocks.empty or len(stocks.columns) < 2:
+                            st.error("Not enough valid data found for correlation analysis")
                             st.stop()
                         
                         # Calculate correlation matrix
@@ -668,7 +737,7 @@ elif page == "Correlation Heatmap":
                         st.session_state['low_corr_counts'] = low_corr_counts
                         st.session_state['low_corr_threshold'] = low_corr_threshold
                         
-                        st.success(f"Correlation analysis complete for {len(stock_list)} stocks!")
+                        st.success(f"Correlation analysis complete for {len(corr_matrix.columns)} stocks!")
                         
                     except Exception as e:
                         st.error(f"Error downloading data: {str(e)}")

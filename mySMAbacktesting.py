@@ -71,14 +71,29 @@ class SMABacktester():
         # downloads historical stock data across a given date range
         df = yf.download(self.symbol, start = self.start, end = self.end)
 
+        # Handle different column structures from yfinance
+        if 'Close' in df.columns:
+            close_col = 'Close'
+        elif 'Adj Close' in df.columns:
+            close_col = 'Adj Close'
+        else:
+            # If neither exists, try to get the first price column
+            price_cols = [col for col in df.columns if col in ['Open', 'High', 'Low', 'Close', 'Adj Close']]
+            if price_cols:
+                close_col = price_cols[0]
+            else:
+                raise ValueError("No price columns found in the data")
+
         #initialise dataframe with the closing price of the stock
-        data = pd.DataFrame(df['Close'])
+        data = pd.DataFrame(df[close_col])
+        data.columns = ['Close']  # Standardize column name
+        
         # calculate daily logarithmic returns
-        data['returns'] = np.log(df['Close'].div(data['Close'].shift(1)))
+        data['returns'] = np.log(data['Close'].div(data['Close'].shift(1)))
         # shorter-term moving average (SMA_S)
-        data['SMA_S'] = df['Close'].rolling(int(self.SMA_S)).mean()
+        data['SMA_S'] = data['Close'].rolling(int(self.SMA_S)).mean()
         # longer-term moving average (SMA_L)
-        data['SMA_L'] = df['Close'].rolling(int(self.SMA_L)).mean()
+        data['SMA_L'] = data['Close'].rolling(int(self.SMA_L)).mean()
 
         # drop any rows with 'NaN' values
         data.dropna(inplace = True)

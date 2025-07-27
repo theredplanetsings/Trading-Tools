@@ -61,13 +61,27 @@ class StanWeinsteinTester():
         # download historical stock data across a given date range
         frame = yf.download(self.symbol, start = self.start, end = self.end)
 
+        # Handle different column structures from yfinance
+        if 'Close' in frame.columns:
+            close_col = 'Close'
+        elif 'Adj Close' in frame.columns:
+            close_col = 'Adj Close'
+        else:
+            # If neither exists, try to get the first price column
+            price_cols = [col for col in frame.columns if col in ['Open', 'High', 'Low', 'Close', 'Adj Close']]
+            if price_cols:
+                close_col = price_cols[0]
+            else:
+                raise ValueError("No price columns found in the data")
+
         # initialise dataframe with the closing price of the stock
-        dataSW = pd.DataFrame(frame['Close'])
+        dataSW = pd.DataFrame(frame[close_col])
+        dataSW.columns = ['Close']  # Standardize column name
 
         # calculate daily logarithmic returns
-        dataSW['returns'] = np.log(frame['Close'].div(frame['Close'].shift(1)))
+        dataSW['returns'] = np.log(dataSW['Close'].div(dataSW['Close'].shift(1)))
         # 30 week moving avg (30 weeks * 5 trading days)
-        dataSW['SMA_30'] = frame['Close'].rolling(window = 30 * 5).mean()
+        dataSW['SMA_30'] = dataSW['Close'].rolling(window = 30 * 5).mean()
         # drop any rows with 'NaN' values
         dataSW.dropna(inplace = True)
 
