@@ -145,7 +145,7 @@ if page == "Home":
     
     # Quick market overview
     st.markdown("### Quick Market Overview")
-    st.caption("💚 Green = Price Up Today | 🔴 Red = Price Down Today")
+    st.caption("Green = Price Up Today | Red = Price Down Today")
     
     # Add a sidebar option to customize market overview stocks
     with st.sidebar:
@@ -157,15 +157,15 @@ if page == "Home":
         preset_col1, preset_col2 = st.columns(2)
         
         with preset_col1:
-            if st.button("📈 Indices", key="preset_indices"):
+            if st.button("Indices", key="preset_indices"):
                 st.session_state.overview_stocks = "SPY, QQQ, DIA, IWM"
-            if st.button("🚀 Tech", key="preset_tech"):
+            if st.button("Tech", key="preset_tech"):
                 st.session_state.overview_stocks = "AAPL, MSFT, GOOGL, NVDA"
         
         with preset_col2:
-            if st.button("🏦 Finance", key="preset_finance"):
+            if st.button("Finance", key="preset_finance"):
                 st.session_state.overview_stocks = "JPM, BAC, WFC, GS"
-            if st.button("💊 Healthcare", key="preset_healthcare"):
+            if st.button("Healthcare", key="preset_healthcare"):
                 st.session_state.overview_stocks = "JNJ, PFE, UNH, ABBV"
         
         # Default stocks
@@ -266,9 +266,9 @@ if page == "Home":
                 st.markdown("---")
                 col_info, col_refresh = st.columns([3, 1])
                 with col_info:
-                    st.caption(f"📊 Showing {len(major_indices)} stocks • Data from last 5 trading days")
+                    st.caption(f"Showing {len(major_indices)} stocks • Data from last 5 trading days")
                 with col_refresh:
-                    if st.button("🔄 Refresh", key="refresh_market_data"):
+                    if st.button("Refresh", key="refresh_market_data"):
                         st.rerun()
                         
     except Exception as e:
