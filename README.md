@@ -1,8 +1,8 @@
 # Trading Tools Dashboard
 
-Streamlit web app for trading analysis and strategy backtesting. Dashboard integrates multiple trading tools into a single platform.
+A comprehensive Streamlit web application for trading analysis and strategy backtesting. This dashboard integrates multiple powerful trading tools into a single, interactive platform.
 
-## Live Site
+## Live Webapp
 
 **[https://tradingtools.streamlit.app/](https://tradingtools.streamlit.app/)**
 
@@ -71,7 +71,7 @@ Streamlit web app for trading analysis and strategy backtesting. Dashboard integ
 
 ### Streamlit Cloud (Recommended)
 1. Upload files to GitHub
-2. Connect repo to [Streamlit Cloud](https://streamlit.io/cloud)
+2. Connect repository to [Streamlit Cloud](https://streamlit.io/cloud)
 3. Deploy automatically
 
 ### Required Files for Deployment:
