@@ -195,10 +195,7 @@ if page == "Home":
     try:
         with st.spinner("Loading market data..."):
             # Download current and previous day data with more robust handling
-            if len(major_indices) == 1:
-                raw_data = yf.download(major_indices[0], period="5d", interval="1d")
-            else:
-                raw_data = yf.download(major_indices, period="5d", interval="1d")
+            raw_data = yf.download(major_indices, period="5d", interval="1d")
             
             if raw_data.empty:
                 st.warning("Unable to fetch market data at this time")
@@ -218,18 +215,29 @@ if page == "Home":
                                 else:
                                     raise ValueError("No price data found")
                             else:
-                                # Multiple symbols case
-                                if isinstance(raw_data.columns, pd.MultiIndex):
-                                    # Multi-level columns
-                                    if 'Close' in raw_data.columns.get_level_values(1):
-                                        symbol_data = raw_data[symbol]['Close']
-                                    elif 'Adj Close' in raw_data.columns.get_level_values(1):
-                                        symbol_data = raw_data[symbol]['Adj Close']
-                                    else:
-                                        raise ValueError("No price data found")
+                                # Multiple symbols case - check if we have MultiIndex columns
+                                if hasattr(raw_data.columns, 'levels') or isinstance(raw_data.columns, pd.MultiIndex):
+                                    # Multi-level columns (symbol, metric)
+                                    try:
+                                        if 'Close' in raw_data.columns.get_level_values(1):
+                                            symbol_data = raw_data[(symbol, 'Close')]
+                                        elif 'Adj Close' in raw_data.columns.get_level_values(1):
+                                            symbol_data = raw_data[(symbol, 'Adj Close')]
+                                        else:
+                                            raise ValueError("No price data found")
+                                    except (KeyError, IndexError):
+                                        # Try alternative access method
+                                        if 'Close' in raw_data.columns.get_level_values(1):
+                                            symbol_data = raw_data.xs('Close', level=1, axis=1)[symbol]
+                                        elif 'Adj Close' in raw_data.columns.get_level_values(1):
+                                            symbol_data = raw_data.xs('Adj Close', level=1, axis=1)[symbol]
+                                        else:
+                                            raise ValueError("No price data found")
                                 else:
-                                    # Flat columns - this shouldn't happen with multiple symbols but just in case
-                                    symbol_data = raw_data['Close'] if 'Close' in raw_data.columns else raw_data['Adj Close']
+                                    # Flat columns structure (shouldn't happen with multiple symbols)
+                                    symbol_data = raw_data[symbol] if symbol in raw_data.columns else None
+                                    if symbol_data is None:
+                                        raise ValueError("Symbol not found in data")
                             
                             # Get the last two trading days
                             symbol_data = symbol_data.dropna()
@@ -259,6 +267,7 @@ if page == "Home":
                             <div class="metric-card">
                                 <h4>{symbol}</h4>
                                 <p><strong>Data unavailable</strong></p>
+                                <p><small>{str(symbol_error)}</small></p>
                             </div>
                             """, unsafe_allow_html=True)
                 
@@ -623,12 +632,13 @@ elif page == "Risk vs Reward":
                             # Try to get Adj Close first, then Close
                             if isinstance(raw_data.columns, pd.MultiIndex):
                                 # Multiple stocks with MultiIndex columns
-                                if 'Adj Close' in raw_data.columns.get_level_values(1):
-                                    stocks = raw_data['Adj Close']
-                                elif 'Close' in raw_data.columns.get_level_values(1):
-                                    stocks = raw_data['Close']
+                                available_columns = raw_data.columns.get_level_values(1).unique()
+                                if 'Adj Close' in available_columns:
+                                    stocks = raw_data.xs('Adj Close', level=1, axis=1)
+                                elif 'Close' in available_columns:
+                                    stocks = raw_data.xs('Close', level=1, axis=1)
                                 else:
-                                    st.error("No price columns found in data")
+                                    st.error(f"No price columns found. Available columns: {list(available_columns)}")
                                     st.stop()
                             else:
                                 # Single stock or flat column structure
@@ -639,7 +649,7 @@ elif page == "Risk vs Reward":
                                     stocks = raw_data[['Close']]
                                     stocks.columns = stock_list
                                 else:
-                                    st.error("No price columns found in data")
+                                    st.error(f"No price columns found. Available columns: {list(raw_data.columns)}")
                                     st.stop()
                         except Exception as e:
                             st.error(f"Error processing data structure: {str(e)}")
@@ -801,12 +811,13 @@ elif page == "Correlation Heatmap":
                             # Try to get Adj Close first, then Close
                             if isinstance(raw_data.columns, pd.MultiIndex):
                                 # Multiple stocks with MultiIndex columns
-                                if 'Adj Close' in raw_data.columns.get_level_values(1):
-                                    stocks = raw_data['Adj Close']
-                                elif 'Close' in raw_data.columns.get_level_values(1):
-                                    stocks = raw_data['Close']
+                                available_columns = raw_data.columns.get_level_values(1).unique()
+                                if 'Adj Close' in available_columns:
+                                    stocks = raw_data.xs('Adj Close', level=1, axis=1)
+                                elif 'Close' in available_columns:
+                                    stocks = raw_data.xs('Close', level=1, axis=1)
                                 else:
-                                    st.error("No price columns found in data")
+                                    st.error(f"No price columns found. Available columns: {list(available_columns)}")
                                     st.stop()
                             else:
                                 # Single stock or flat column structure
@@ -817,7 +828,7 @@ elif page == "Correlation Heatmap":
                                     stocks = raw_data[['Close']]
                                     stocks.columns = stock_list
                                 else:
-                                    st.error("No price columns found in data")
+                                    st.error(f"No price columns found. Available columns: {list(raw_data.columns)}")
                                     st.stop()
                         except Exception as e:
                             st.error(f"Error processing data structure: {str(e)}")
