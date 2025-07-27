@@ -125,27 +125,44 @@ if page == "Home":
     major_indices = ['SPY', 'QQQ', 'DIA', 'IWM']
     
     try:
-        data = yf.download(major_indices, period="1d", interval="1d")['Close']
-        prev_data = yf.download(major_indices, period="2d", interval="1d")['Close']
-        
-        cols = st.columns(len(major_indices))
-        for i, symbol in enumerate(major_indices):
-            with cols[i]:
-                current_price = data[symbol].iloc[-1]
-                prev_price = prev_data[symbol].iloc[-2]
-                change = current_price - prev_price
-                change_pct = (change / prev_price) * 100
+        with st.spinner("Loading market data..."):
+            # Download current and previous day data
+            data = yf.download(major_indices, period="5d", interval="1d")['Close']
+            
+            if data.empty:
+                st.warning("Unable to fetch market data at this time")
+            else:
+                # Get the last two trading days
+                current_prices = data.iloc[-1]
+                previous_prices = data.iloc[-2]
                 
-                color = "success-metric" if change >= 0 else "danger-metric"
-                st.markdown(f"""
-                <div class="metric-card {color}">
-                    <h4>{symbol}</h4>
-                    <p><strong>${current_price:.2f}</strong></p>
-                    <p>{change:+.2f} ({change_pct:+.2f}%)</p>
-                </div>
-                """, unsafe_allow_html=True)
-    except:
-        st.info("Market data temporarily unavailable")
+                cols = st.columns(len(major_indices))
+                for i, symbol in enumerate(major_indices):
+                    with cols[i]:
+                        if symbol in current_prices.index and symbol in previous_prices.index:
+                            current_price = current_prices[symbol]
+                            prev_price = previous_prices[symbol]
+                            change = current_price - prev_price
+                            change_pct = (change / prev_price) * 100
+                            
+                            color = "success-metric" if change >= 0 else "danger-metric"
+                            st.markdown(f"""
+                            <div class="metric-card {color}">
+                                <h4>{symbol}</h4>
+                                <p><strong>${current_price:.2f}</strong></p>
+                                <p>{change:+.2f} ({change_pct:+.2f}%)</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        else:
+                            st.markdown(f"""
+                            <div class="metric-card">
+                                <h4>{symbol}</h4>
+                                <p><strong>Data unavailable</strong></p>
+                            </div>
+                            """, unsafe_allow_html=True)
+    except Exception as e:
+        st.error(f"Error loading market data: {str(e)}")
+        st.info("Market data temporarily unavailable - please try refreshing the page")
 
 # STAN WEINSTEIN STRATEGY PAGE
 elif page == "Stan Weinstein Strategy":
