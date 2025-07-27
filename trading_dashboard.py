@@ -45,15 +45,38 @@ st.markdown("""
         padding: 1rem;
         border-radius: 10px;
         border-left: 5px solid #1f77b4;
+        color: #1a1a1a;
+        font-weight: 500;
+    }
+    .metric-card h4 {
+        color: #1a1a1a;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    .metric-card p {
+        color: #1a1a1a;
+        margin: 0.25rem 0;
     }
     .success-metric {
         border-left-color: #28a745;
+        background-color: #d4edda;
+    }
+    .success-metric h4, .success-metric p {
+        color: #155724;
     }
     .warning-metric {
         border-left-color: #ffc107;
+        background-color: #fff3cd;
+    }
+    .warning-metric h4, .warning-metric p {
+        color: #856404;
     }
     .danger-metric {
         border-left-color: #dc3545;
+        background-color: #f8d7da;
+    }
+    .danger-metric h4, .danger-metric p {
+        color: #721c24;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -122,16 +145,65 @@ if page == "Home":
     
     # Quick market overview
     st.markdown("### Quick Market Overview")
-    major_indices = ['SPY', 'QQQ', 'DIA', 'IWM']
+    st.caption("💚 Green = Price Up Today | 🔴 Red = Price Down Today")
+    
+    # Add a sidebar option to customize market overview stocks
+    with st.sidebar:
+        st.markdown("---")
+        st.markdown("### Market Overview Settings")
+        
+        # Quick preset buttons
+        st.markdown("**Quick Presets:**")
+        preset_col1, preset_col2 = st.columns(2)
+        
+        with preset_col1:
+            if st.button("📈 Indices", key="preset_indices"):
+                st.session_state.overview_stocks = "SPY, QQQ, DIA, IWM"
+            if st.button("🚀 Tech", key="preset_tech"):
+                st.session_state.overview_stocks = "AAPL, MSFT, GOOGL, NVDA"
+        
+        with preset_col2:
+            if st.button("🏦 Finance", key="preset_finance"):
+                st.session_state.overview_stocks = "JPM, BAC, WFC, GS"
+            if st.button("💊 Healthcare", key="preset_healthcare"):
+                st.session_state.overview_stocks = "JNJ, PFE, UNH, ABBV"
+        
+        # Default stocks
+        default_overview_stocks = ['SPY', 'QQQ', 'DIA', 'IWM']
+        
+        # Allow user to customize stocks
+        overview_stocks_input = st.text_input(
+            "Market Overview Stocks (comma-separated)", 
+            value=st.session_state.get('overview_stocks', ", ".join(default_overview_stocks)),
+            help="Enter stock symbols separated by commas (e.g., SPY, QQQ, AAPL, TSLA)"
+        )
+        
+        # Update session state when input changes
+        st.session_state.overview_stocks = overview_stocks_input
+        
+        # Parse the input
+        major_indices = [stock.strip().upper() for stock in overview_stocks_input.split(',') if stock.strip()]
+        
+        # Limit to maximum 6 stocks for display purposes
+        if len(major_indices) > 6:
+            st.warning("Maximum 6 stocks allowed for market overview. Using first 6.")
+            major_indices = major_indices[:6]
+        
+        if len(major_indices) == 0:
+            major_indices = default_overview_stocks
     
     try:
         with st.spinner("Loading market data..."):
-            # Download current and previous day data
-            raw_data = yf.download(major_indices, period="5d", interval="1d", group_by='ticker')
+            # Download current and previous day data with more robust handling
+            if len(major_indices) == 1:
+                raw_data = yf.download(major_indices[0], period="5d", interval="1d")
+            else:
+                raw_data = yf.download(major_indices, period="5d", interval="1d")
             
             if raw_data.empty:
                 st.warning("Unable to fetch market data at this time")
             else:
+                # Create responsive columns based on number of stocks
                 cols = st.columns(len(major_indices))
                 for i, symbol in enumerate(major_indices):
                     with cols[i]:
@@ -139,10 +211,25 @@ if page == "Home":
                             # Handle different data structures from yfinance
                             if len(major_indices) == 1:
                                 # Single symbol case
-                                symbol_data = raw_data['Close'] if 'Close' in raw_data.columns else raw_data['Adj Close']
+                                if 'Close' in raw_data.columns:
+                                    symbol_data = raw_data['Close']
+                                elif 'Adj Close' in raw_data.columns:
+                                    symbol_data = raw_data['Adj Close']
+                                else:
+                                    raise ValueError("No price data found")
                             else:
                                 # Multiple symbols case
-                                symbol_data = raw_data[symbol]['Close'] if 'Close' in raw_data[symbol].columns else raw_data[symbol]['Adj Close']
+                                if isinstance(raw_data.columns, pd.MultiIndex):
+                                    # Multi-level columns
+                                    if 'Close' in raw_data.columns.get_level_values(1):
+                                        symbol_data = raw_data[symbol]['Close']
+                                    elif 'Adj Close' in raw_data.columns.get_level_values(1):
+                                        symbol_data = raw_data[symbol]['Adj Close']
+                                    else:
+                                        raise ValueError("No price data found")
+                                else:
+                                    # Flat columns - this shouldn't happen with multiple symbols but just in case
+                                    symbol_data = raw_data['Close'] if 'Close' in raw_data.columns else raw_data['Adj Close']
                             
                             # Get the last two trading days
                             symbol_data = symbol_data.dropna()
@@ -174,6 +261,16 @@ if page == "Home":
                                 <p><strong>Data unavailable</strong></p>
                             </div>
                             """, unsafe_allow_html=True)
+                
+                # Add refresh button and info
+                st.markdown("---")
+                col_info, col_refresh = st.columns([3, 1])
+                with col_info:
+                    st.caption(f"📊 Showing {len(major_indices)} stocks • Data from last 5 trading days")
+                with col_refresh:
+                    if st.button("🔄 Refresh", key="refresh_market_data"):
+                        st.rerun()
+                        
     except Exception as e:
         st.error(f"Error loading market data: {str(e)}")
         st.info("Market data temporarily unavailable - please try refreshing the page")
