@@ -522,27 +522,31 @@ elif page == "Risk vs Reward":
                             st.stop()
                         
                         # Handle different data structures from yfinance
-                        if len(stock_list) == 1:
-                            # Single stock case
-                            if 'Adj Close' in raw_data.columns:
-                                stocks = raw_data['Adj Close'].to_frame()
-                            elif 'Close' in raw_data.columns:
-                                stocks = raw_data['Close'].to_frame()
+                        try:
+                            # Try to get Adj Close first, then Close
+                            if isinstance(raw_data.columns, pd.MultiIndex):
+                                # Multiple stocks with MultiIndex columns
+                                if 'Adj Close' in raw_data.columns.get_level_values(1):
+                                    stocks = raw_data['Adj Close']
+                                elif 'Close' in raw_data.columns.get_level_values(1):
+                                    stocks = raw_data['Close']
+                                else:
+                                    st.error("No price columns found in data")
+                                    st.stop()
                             else:
-                                st.error("No price data found")
-                                st.stop()
-                            stocks.columns = stock_list
-                        else:
-                            # Multiple stocks case
-                            if ('Adj Close' in raw_data.columns.get_level_values(1) if isinstance(raw_data.columns, pd.MultiIndex) 
-                                else 'Adj Close' in raw_data.columns):
-                                stocks = raw_data['Adj Close'] if isinstance(raw_data.columns, pd.MultiIndex) else raw_data[['Adj Close']]
-                            elif ('Close' in raw_data.columns.get_level_values(1) if isinstance(raw_data.columns, pd.MultiIndex) 
-                                  else 'Close' in raw_data.columns):
-                                stocks = raw_data['Close'] if isinstance(raw_data.columns, pd.MultiIndex) else raw_data[['Close']]
-                            else:
-                                st.error("No price data found")
-                                st.stop()
+                                # Single stock or flat column structure
+                                if 'Adj Close' in raw_data.columns:
+                                    stocks = raw_data[['Adj Close']]
+                                    stocks.columns = stock_list
+                                elif 'Close' in raw_data.columns:
+                                    stocks = raw_data[['Close']]
+                                    stocks.columns = stock_list
+                                else:
+                                    st.error("No price columns found in data")
+                                    st.stop()
+                        except Exception as e:
+                            st.error(f"Error processing data structure: {str(e)}")
+                            st.stop()
                         
                         # Remove any NaN columns/stocks
                         stocks = stocks.dropna(axis=1, how='all')
@@ -696,27 +700,31 @@ elif page == "Correlation Heatmap":
                             st.stop()
                         
                         # Handle different data structures from yfinance
-                        if len(stock_list) == 1:
-                            # Single stock case
-                            if 'Adj Close' in raw_data.columns:
-                                stocks = raw_data['Adj Close'].to_frame()
-                            elif 'Close' in raw_data.columns:
-                                stocks = raw_data['Close'].to_frame()
+                        try:
+                            # Try to get Adj Close first, then Close
+                            if isinstance(raw_data.columns, pd.MultiIndex):
+                                # Multiple stocks with MultiIndex columns
+                                if 'Adj Close' in raw_data.columns.get_level_values(1):
+                                    stocks = raw_data['Adj Close']
+                                elif 'Close' in raw_data.columns.get_level_values(1):
+                                    stocks = raw_data['Close']
+                                else:
+                                    st.error("No price columns found in data")
+                                    st.stop()
                             else:
-                                st.error("No price data found")
-                                st.stop()
-                            stocks.columns = stock_list
-                        else:
-                            # Multiple stocks case
-                            if ('Adj Close' in raw_data.columns.get_level_values(1) if isinstance(raw_data.columns, pd.MultiIndex) 
-                                else 'Adj Close' in raw_data.columns):
-                                stocks = raw_data['Adj Close'] if isinstance(raw_data.columns, pd.MultiIndex) else raw_data[['Adj Close']]
-                            elif ('Close' in raw_data.columns.get_level_values(1) if isinstance(raw_data.columns, pd.MultiIndex) 
-                                  else 'Close' in raw_data.columns):
-                                stocks = raw_data['Close'] if isinstance(raw_data.columns, pd.MultiIndex) else raw_data[['Close']]
-                            else:
-                                st.error("No price data found")
-                                st.stop()
+                                # Single stock or flat column structure
+                                if 'Adj Close' in raw_data.columns:
+                                    stocks = raw_data[['Adj Close']]
+                                    stocks.columns = stock_list
+                                elif 'Close' in raw_data.columns:
+                                    stocks = raw_data[['Close']]
+                                    stocks.columns = stock_list
+                                else:
+                                    st.error("No price columns found in data")
+                                    st.stop()
+                        except Exception as e:
+                            st.error(f"Error processing data structure: {str(e)}")
+                            st.stop()
                         
                         # Remove any NaN columns/stocks
                         stocks = stocks.dropna(axis=1, how='all')
