@@ -202,64 +202,75 @@ if page == "Home":
             else:
                 # Create responsive columns based on number of stocks
                 cols = st.columns(len(major_indices))
+                
+                # Handle different data structures from yfinance more robustly
+                if len(major_indices) == 1:
+                    # Single symbol case - data comes with flat columns
+                    symbol_data_dict = {}
+                    symbol = major_indices[0]
+                    if 'Adj Close' in raw_data.columns:
+                        symbol_data_dict[symbol] = raw_data['Adj Close']
+                    elif 'Close' in raw_data.columns:
+                        symbol_data_dict[symbol] = raw_data['Close']
+                    else:
+                        st.error(f"No price data found. Available columns: {list(raw_data.columns)}")
+                else:
+                    # Multiple symbols case - handle MultiIndex columns
+                    symbol_data_dict = {}
+                    try:
+                        if isinstance(raw_data.columns, pd.MultiIndex):
+                            available_columns = raw_data.columns.get_level_values(1).unique()
+                            if 'Adj Close' in available_columns:
+                                price_data = raw_data.xs('Adj Close', level=1, axis=1)
+                            elif 'Close' in available_columns:
+                                price_data = raw_data.xs('Close', level=1, axis=1)
+                            else:
+                                st.error(f"No price columns found. Available columns: {list(available_columns)}")
+                            
+                            # Extract data for each symbol
+                            for symbol in major_indices:
+                                if symbol in price_data.columns:
+                                    symbol_data_dict[symbol] = price_data[symbol]
+                        else:
+                            st.error(f"Unexpected data structure. Columns: {list(raw_data.columns)}")
+                    except Exception as e:
+                        st.error(f"Error processing multi-symbol data: {str(e)}")
+                
+                # Display data for each symbol
                 for i, symbol in enumerate(major_indices):
                     with cols[i]:
                         try:
-                            # Handle different data structures from yfinance
-                            if len(major_indices) == 1:
-                                # Single symbol case
-                                if 'Close' in raw_data.columns:
-                                    symbol_data = raw_data['Close']
-                                elif 'Adj Close' in raw_data.columns:
-                                    symbol_data = raw_data['Adj Close']
-                                else:
-                                    raise ValueError("No price data found")
-                            else:
-                                # Multiple symbols case - check if we have MultiIndex columns
-                                if hasattr(raw_data.columns, 'levels') or isinstance(raw_data.columns, pd.MultiIndex):
-                                    # Multi-level columns (symbol, metric)
-                                    try:
-                                        if 'Close' in raw_data.columns.get_level_values(1):
-                                            symbol_data = raw_data[(symbol, 'Close')]
-                                        elif 'Adj Close' in raw_data.columns.get_level_values(1):
-                                            symbol_data = raw_data[(symbol, 'Adj Close')]
-                                        else:
-                                            raise ValueError("No price data found")
-                                    except (KeyError, IndexError):
-                                        # Try alternative access method
-                                        if 'Close' in raw_data.columns.get_level_values(1):
-                                            symbol_data = raw_data.xs('Close', level=1, axis=1)[symbol]
-                                        elif 'Adj Close' in raw_data.columns.get_level_values(1):
-                                            symbol_data = raw_data.xs('Adj Close', level=1, axis=1)[symbol]
-                                        else:
-                                            raise ValueError("No price data found")
-                                else:
-                                    # Flat columns structure (shouldn't happen with multiple symbols)
-                                    symbol_data = raw_data[symbol] if symbol in raw_data.columns else None
-                                    if symbol_data is None:
-                                        raise ValueError("Symbol not found in data")
-                            
-                            # Get the last two trading days
-                            symbol_data = symbol_data.dropna()
-                            if len(symbol_data) >= 2:
-                                current_price = symbol_data.iloc[-1]
-                                prev_price = symbol_data.iloc[-2]
-                                change = current_price - prev_price
-                                change_pct = (change / prev_price) * 100
+                            if symbol in symbol_data_dict:
+                                symbol_data = symbol_data_dict[symbol].dropna()
+                            if symbol in symbol_data_dict:
+                                symbol_data = symbol_data_dict[symbol].dropna()
                                 
-                                color = "success-metric" if change >= 0 else "danger-metric"
-                                st.markdown(f"""
-                                <div class="metric-card {color}">
-                                    <h4>{symbol}</h4>
-                                    <p><strong>${current_price:.2f}</strong></p>
-                                    <p>{change:+.2f} ({change_pct:+.2f}%)</p>
-                                </div>
-                                """, unsafe_allow_html=True)
+                                if len(symbol_data) >= 2:
+                                    current_price = symbol_data.iloc[-1]
+                                    prev_price = symbol_data.iloc[-2]
+                                    change = current_price - prev_price
+                                    change_pct = (change / prev_price) * 100
+                                    
+                                    color = "success-metric" if change >= 0 else "danger-metric"
+                                    st.markdown(f"""
+                                    <div class="metric-card {color}">
+                                        <h4>{symbol}</h4>
+                                        <p><strong>${current_price:.2f}</strong></p>
+                                        <p>{change:+.2f} ({change_pct:+.2f}%)</p>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                else:
+                                    st.markdown(f"""
+                                    <div class="metric-card">
+                                        <h4>{symbol}</h4>
+                                        <p><strong>Insufficient data</strong></p>
+                                    </div>
+                                    """, unsafe_allow_html=True)
                             else:
                                 st.markdown(f"""
                                 <div class="metric-card">
                                     <h4>{symbol}</h4>
-                                    <p><strong>Insufficient data</strong></p>
+                                    <p><strong>Symbol not found</strong></p>
                                 </div>
                                 """, unsafe_allow_html=True)
                         except Exception as symbol_error:
