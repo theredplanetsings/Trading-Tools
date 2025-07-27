@@ -8,11 +8,10 @@ A comprehensive Streamlit web application for trading analysis and strategy back
 
 ## Features
 
-- **Stan Weinstein Strategy**: Backtest the famous 30-week moving average strategy
+- **Stan Weinstein Strategy**: Backtest Stan's 30-week moving average strategy
 - **SMA Backtesting**: Test short vs long-term moving average crossover strategies  
 - **Risk vs Reward Analysis**: Analyse risk-return profiles of multiple stocks
 - **Correlation Heatmap**: Visualise correlations between different stocks
-- **Interactive Charts**: Beautiful, interactive plots powered by Plotly
 - **Real-time Data**: Live stock data from Yahoo Finance
 
 ## Installation and Setup
@@ -35,6 +34,20 @@ A comprehensive Streamlit web application for trading analysis and strategy back
 
 4. **Open your browser** to `http://localhost:8501`
 
+## Project Structure
+
+```
+Trading-Tools/
+├── trading_dashboard.py      # Main Streamlit dashboard application
+├── StanWeinstein.py         # Stan Weinstein strategy backtesting class
+├── mySMAbacktesting.py      # SMA crossover strategy backtesting class
+├── riskvsreward.py          # Risk vs reward analysis script
+├── correlationHeatMap.py    # Correlation heatmap generation script
+├── requirements.txt         # Python dependencies
+├── README.md               # Project documentation
+└── LICENCE                 # Project licence
+```
+
 ## Dependencies
 
 - `streamlit` - Web app framework
@@ -44,6 +57,14 @@ A comprehensive Streamlit web application for trading analysis and strategy back
 - `plotly` - Interactive charts
 - `matplotlib` - Additional plotting
 - `seaborn` - Statistical visualisation
+
+## Technical Features
+
+- **Object-Oriented Design**: Modular backtesting classes for easy extension and maintenance
+- **Interactive Visualisations**: Dynamic Plotly charts with zoom, pan, and hover functionality
+- **Statistical Analysis**: Comprehensive performance metrics and correlation matrices
+- **Responsive Web Interface**: Mobile-friendly Streamlit dashboard with intuitive navigation
+- **Scalable Architecture**: Easily extensible codebase for adding new trading strategies
 
 ## Usage
 
@@ -65,7 +86,7 @@ A comprehensive Streamlit web application for trading analysis and strategy back
 ### Correlation Analysis
 1. Input stock symbols for correlation analysis
 2. Adjust correlation threshold
-3. View heatmap and diversification insights
+3. View heatmap for portfolio diversification insights
 
 ## Deployment
 
@@ -75,11 +96,25 @@ A comprehensive Streamlit web application for trading analysis and strategy back
 3. Deploy automatically
 
 ### Required Files for Deployment:
-- `trading_dashboard.py`
-- `StanWeinstein.py`
-- `mySMAbacktesting.py`  
-- `requirements.txt`
-- `README.md`
+- `trading_dashboard.py` - Main application entry point
+- `StanWeinstein.py` - Stan Weinstein strategy implementation
+- `mySMAbacktesting.py` - SMA backtesting functionality
+- `requirements.txt` - Python dependencies
+- `README.md` - Documentation
+
+### Optional Files:
+- `riskvsreward.py` - Standalone risk analysis script
+- `correlationHeatMap.py` - Standalone correlation analysis script
+
+## Performance Metrics
+
+The dashboard calculates key financial metrics:
+
+- **Total Returns**: Strategy vs buy-and-hold comparison
+- **Volatility Analysis**: Risk assessment through standard deviation
+- **Sharpe Ratios**: Risk-adjusted return calculations
+- **Maximum Drawdown**: Worst peak-to-trough decline analysis
+- **Win Rate**: Percentage of profitable trades
 
 ## Contributing
 
@@ -91,34 +126,8 @@ A comprehensive Streamlit web application for trading analysis and strategy back
 
 ## Licence
 
-This project is licensed under the MIT Licence - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT Licence - see the [LICENCE](LICENCE) file for details.
 
 ## Author
 
 - GitHub: [@theredplanetsings](https://github.com/theredplanetsings)
-
-## Acknowledgements
-
-- Yahoo Finance for providing free stock data
-- Streamlit team for the amazing framework
-- Plotly for interactive visualisations
-
-**Instructions**
-
-1. Open the riskvsreward.py file.
-2. Modify the stocks, start, and end variables to specify the list of stocks and the date range.
-3. Run the script to see the risk vs reward plot.
-
-### `correlationHeatMap.py`
-
-This script produces a correlational heatmap for a given list of stocks.
-
-**Instructions**
-
-1. Open the correlationHeatMap.py file.
-2. Modify the stocks, start, and end variables to specify the list of stocks and the date range.
-3. Run the script to see the correlation heatmap.
-
-# License
-
-This project is licensed under the Creative Commons Zero v1.0 Universal. See the LICENSE file for details.
