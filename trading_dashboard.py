@@ -235,11 +235,20 @@ if page == "Home":
                                     if symbol in price_data.columns:
                                         symbol_data_dict[symbol] = price_data[symbol]
                         else:
-                            # Flat columns case - yfinance sometimes returns just symbol names when downloading adjusted close
-                            # In this case, each column is already the close price for that symbol
-                            for symbol in major_indices:
-                                if symbol in raw_data.columns:
+                            # Flat columns case - check if columns are symbol names (common with yfinance)
+                            # If we have symbol names as columns, it means yfinance returned adjusted close by default
+                            symbols_found = [symbol for symbol in major_indices if symbol in raw_data.columns]
+                            if len(symbols_found) > 0:
+                                # Columns are symbol names, data is the adjusted close
+                                for symbol in symbols_found:
                                     symbol_data_dict[symbol] = raw_data[symbol]
+                            else:
+                                # Try traditional column names as fallback
+                                for symbol in major_indices:
+                                    if symbol in raw_data.columns:
+                                        symbol_data_dict[symbol] = raw_data[symbol]
+                                if not symbol_data_dict:
+                                    st.error(f"No matching symbols found. Available columns: {list(raw_data.columns)}")
                     except Exception as e:
                         st.error(f"Error processing multi-symbol data: {str(e)}")
                 
