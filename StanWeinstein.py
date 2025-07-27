@@ -58,34 +58,34 @@ class StanWeinsteinTester():
         DataFrame
             A DataFrame containing the historical stock data, daily logarithmic returns, and the 30-week moving average.
         """
-        # download historical stock data across a given date range
+        # grab historical stock data for our date range
         frame = yf.download(self.symbol, start = self.start, end = self.end)
 
-        # Handle different column structures from yfinance
+        # yfinance can return data in different formats, so let's sort that out
         if 'Close' in frame.columns:
             close_col = 'Close'
         elif 'Adj Close' in frame.columns:
             close_col = 'Adj Close'
         else:
-            # If neither exists, try to get the first price column
+            # if neither exists, just grab the first price column we can find
             price_cols = [col for col in frame.columns if col in ['Open', 'High', 'Low', 'Close', 'Adj Close']]
             if price_cols:
                 close_col = price_cols[0]
             else:
                 raise ValueError("No price columns found in the data")
 
-        # initialise dataframe with the closing price of the stock
+        # set up our dataframe with just the closing prices
         dataSW = pd.DataFrame(frame[close_col])
-        dataSW.columns = ['Close']  # Standardize column name
+        dataSW.columns = ['Close']  # make sure the column name is consistent
 
-        # calculate daily logarithmic returns
+        # work out daily log returns (fancy way of calculating percentage changes)
         dataSW['returns'] = np.log(dataSW['Close'].div(dataSW['Close'].shift(1)))
-        # 30 week moving avg (30 weeks * 5 trading days)
+        # calculate the 30-week moving average (30 weeks × 5 trading days = 150 days)
         dataSW['SMA_30'] = dataSW['Close'].rolling(window = 30 * 5).mean()
-        # drop any rows with 'NaN' values
+        # get rid of any rows with missing data
         dataSW.dropna(inplace = True)
 
-        #store the data in an instance variable
+        # save this data so we can use it later
         self.data2 = dataSW
         return dataSW
     
@@ -99,25 +99,25 @@ class StanWeinsteinTester():
             A tuple containing the performance of the strategy and its outperformance compared to the buy-and-hold strategy.
         """
         dataSW = self.data2.copy().dropna()
-        #trading signal: 1 for long (closing price > 30-week SMA)
-        # -1 for short (closing price < 30-week SMA)
+        # create our trading signals: 1 means buy (price above 30-week average)
+        # -1 means sell (price below 30-week average) 
         dataSW['position'] = np.where(dataSW['Close'] > dataSW['SMA_30'], 1, -1)
-        #calculate strategy returns based on position
+        # work out how our strategy performs based on these positions
         dataSW['strategy'] = dataSW['returns'] * dataSW['position'].shift(1)
         dataSW.dropna(inplace = True)
 
-        #calculate the cumulative returns for buying and holding vs strategy
+        # calculate cumulative returns - both for buy & hold and our strategy
         dataSW['returnsB&H'] = dataSW['returns'].cumsum().apply(np.exp)
         dataSW['returnstrategy'] = dataSW['strategy'].cumsum().apply(np.exp)
 
-        # calculates the performance of the strategy
+        # see how well our strategy did
         perf = dataSW['returnstrategy'].iloc[-1]
         outperf = perf - dataSW['returnsB&H'].iloc[-1]
 
-        #store data in an instance variable
+        # save this data for plotting later
         self.results = dataSW
 
-        #calculate total return & stdev of the strategy
+        # calculate some extra stats we might need
         ret = np.exp(dataSW['strategy'].sum())
         std = dataSW['strategy'].std() * np.sqrt(252)
 
@@ -138,7 +138,7 @@ def test_case():
     """
     A test case to demonstrate the functionality of the StanWeinsteinTester class.
     """
-    # instance of the class to test the strategy
+    # create an instance to test the strategy on NVIDIA
     test = StanWeinsteinTester('NVDA', "2000-01-01", "2025-01-04")
     test.test_results()
     test.plot_results()

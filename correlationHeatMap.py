@@ -6,39 +6,39 @@ import numpy as np
 __author__ = "https://github.com/theredplanetsings"
 __date__ = "04/01/2025"
 
-# list of stock tickers
+# bunch of stock tickers to analyse
 stock_tickers = [
-    "SPY",   # SPDR S&P 500 ETF Trust
-    "AMZN",  # Amazon.com, Inc.
-    "GOOGL", # Alphabet Inc. (Class A)
-    "BABA",  # Alibaba Group Holding Limited.
-    "TSLA",  # Tesla, Inc.
-    "BRK-B", # Berkshire Hathaway Inc. (Class B)
-    "NVDA",  # NVIDIA Corporation
-    "JPM",   # JPMorgan Chase & Co.
+    "SPY",   # S&P 500 ETF
+    "AMZN",  # Amazon
+    "GOOGL", # Google (Alphabet Class A)
+    "BABA",  # Alibaba
+    "TSLA",  # Tesla
+    "BRK-B", # Berkshire Hathaway Class B
+    "NVDA",  # NVIDIA
+    "JPM",   # JPMorgan Chase
     "JNJ",   # Johnson & Johnson
-    "V",     # Visa Inc.
-    "PG",    # Procter & Gamble Co.
-    "UNH",   # UnitedHealth Group Incorporated
-    "HD",    # The Home Depot, Inc.
-    "MA",    # Mastercard Incorporated
-    "ORCL",  # Oracle Corporation
-    "PYPL",  # PayPal Holdings, Inc.
-    "NFLX",  # Netflix, Inc.
-    "INTC",  # Intel Corporation
-    "IBM",   # International Business Machines Corporation
-    "ADBE"   # Adobe Inc.
+    "V",     # Visa
+    "PG",    # Procter & Gamble
+    "UNH",   # UnitedHealth Group
+    "HD",    # Home Depot
+    "MA",    # Mastercard
+    "ORCL",  # Oracle
+    "PYPL",  # PayPal
+    "NFLX",  # Netflix
+    "INTC",  # Intel
+    "IBM",   # IBM
+    "ADBE"   # Adobe
 ]
 
-# sorts tickers alphabetically
+# put them in alphabetical order to make the chart cleaner
 tickers_sorted = sorted(stock_tickers)
-# downloads stock data across a given date range
+# grab stock data from yfinance for our date range - just need adjusted close prices
 stocks = yf.download(tickers_sorted, start = "2020-01-01", end = "2023-01-01")['Adj Close']
 
-# calculates the correlation matrix
+# work out how correlated each stock is with every other stock
 corr_matrix = stocks.corr()
 
-# plots the heatmap
+# create a nice heatmap to visualise the correlations
 plt.figure(figsize = (14, 10))
 sns.heatmap(corr_matrix, annot = True, cmap='Reds', vmin = -1, vmax = 1,
             xticklabels = tickers_sorted, yticklabels = tickers_sorted)
@@ -47,12 +47,12 @@ plt.xticks(rotation = 45, ha = 'right')
 plt.yticks(rotation = 0)
 plt.show()
 
-# identifies stocks with more low correlation scores
+# find stocks that don't move together much (good for diversification)
 low_corr_threshold = 0.4
-# subtract 1 to exclude self-correlation
+# take away 1 because each stock is perfectly correlated with itself (obviously!)
 low_corr_counts = (np.abs(corr_matrix) < low_corr_threshold).sum(axis = 1) - 1 
 
-# prints stocks with their low correlation counts
+# show which stocks have the most low correlations (best for diversifying)
 for ticker in tickers_sorted:
     low_corr_tickers = corr_matrix.index[(np.abs(corr_matrix[ticker]) < low_corr_threshold)
     & (corr_matrix.index != ticker)].tolist()

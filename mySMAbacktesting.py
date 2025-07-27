@@ -68,36 +68,36 @@ class SMABacktester():
         DataFrame
             A DataFrame containing the historical stock data, daily logarithmic returns, and moving averages.
         """
-        # downloads historical stock data across a given date range
+        # grab historical stock data for our date range
         df = yf.download(self.symbol, start = self.start, end = self.end)
 
-        # Handle different column structures from yfinance
+        # yfinance can be a bit inconsistent with column names, so let's handle that
         if 'Close' in df.columns:
             close_col = 'Close'
         elif 'Adj Close' in df.columns:
             close_col = 'Adj Close'
         else:
-            # If neither exists, try to get the first price column
+            # if neither exists, just grab the first price column we can find
             price_cols = [col for col in df.columns if col in ['Open', 'High', 'Low', 'Close', 'Adj Close']]
             if price_cols:
                 close_col = price_cols[0]
             else:
                 raise ValueError("No price columns found in the data")
 
-        #initialise dataframe with the closing price of the stock
+        # set up our dataframe with just the closing prices
         data = pd.DataFrame(df[close_col])
-        data.columns = ['Close']  # Standardize column name
+        data.columns = ['Close']  # make sure the column name is consistent
         
-        # calculate daily logarithmic returns
+        # work out daily log returns
         data['returns'] = np.log(data['Close'].div(data['Close'].shift(1)))
-        # shorter-term moving average (SMA_S)
+        # calculate the short-term moving average
         data['SMA_S'] = data['Close'].rolling(int(self.SMA_S)).mean()
-        # longer-term moving average (SMA_L)
+        # calculate the long-term moving average  
         data['SMA_L'] = data['Close'].rolling(int(self.SMA_L)).mean()
 
-        # drop any rows with 'NaN' values
+        # clean up any rows with missing data
         data.dropna(inplace = True)
-        # store the data in an instance variable & return
+        # save this data for later use
         self.data2 = data
         return data
 
@@ -110,30 +110,30 @@ class SMABacktester():
         tuple
             A tuple containing the performance of the strategy and its outperformance compared to the buy-and-hold strategy.
         """
-        # copy the previously-prepared data
+        # work with a copy of our prepared data
         data = self.data2.copy().dropna()
-        # generate trading signals:
-        # 1 for long (SMA_S > SMA_L)
-        # -1 for short (SMA_S < SMA_L)
+        # create trading signals based on moving average crossovers:
+        # 1 means buy (short MA above long MA)
+        # -1 means sell (short MA below long MA)
         data['position'] = np.where(data['SMA_S'] > data['SMA_L'], 1, -1)
-        # calculate strategy returns based on position
+        # calculate how our strategy performs based on these positions
         data['strategy'] = data['returns'] * data['position'].shift(1)
         data.dropna(inplace=True)
-        # calculate the cumulative returns for buying and holding vs strategy
+        # work out cumulative returns for both buy & hold and our strategy
         data['returnsB&H'] = data['returns'].cumsum().apply(np.exp)
         data['returnstrategy'] = data['strategy'].cumsum().apply(np.exp)
 
-        # calculate the performance of the strategy
+        # see how well our strategy performed
         perf = data['returnstrategy'].iloc[-1]
         outperf = perf - data['returnsB&H'].iloc[-1]
 
-        # store data in an instance variable
+        # save the results for plotting later
         self.results = data
         
-        # calculate total return & stdev of the strategy
+        # calculate some extra stats we might need
         ret = np.exp(data['strategy'].sum())
         std = data['strategy'].std() * np.sqrt(252)
-        # return the performance and outperformance of the strategy
+        # return how well we did compared to just buying and holding
         return round(perf, 6), round(outperf, 6)
 
     def plot_results(self):
@@ -151,7 +151,7 @@ def test_case():
     """
     A test case to demonstrate the functionality of the SMABacktester class.
     """
-    # instance of the class to test the strategy
+    # create an instance to test the strategy on NVIDIA with 1 vs 200 day moving averages
     test = SMABacktester('NVDA', 1, 200, "2000-01-01", "2025-01-04")
     test.test_results()
     test.plot_results()
