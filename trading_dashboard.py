@@ -675,21 +675,27 @@ elif page == "Risk vs Reward":
                         
                         # Handle different data structures from yfinance
                         try:
-                            # Debug info for Risk vs Reward
-                            st.info(f"Raw data columns: {list(raw_data.columns)}")
-                            st.info(f"Stock list: {stock_list}")
-                            st.info(f"Is MultiIndex: {isinstance(raw_data.columns, pd.MultiIndex)}")
-                            
                             # Try to get Adj Close first, then Close
                             if isinstance(raw_data.columns, pd.MultiIndex):
                                 # Multiple stocks with MultiIndex columns
-                                available_columns = raw_data.columns.get_level_values(1).unique()
-                                if 'Adj Close' in available_columns:
+                                level_0_values = raw_data.columns.get_level_values(0).unique()
+                                level_1_values = raw_data.columns.get_level_values(1).unique()
+                                
+                                # Check if level 0 contains price columns or symbols
+                                if 'Adj Close' in level_0_values:
+                                    # Format: (metric, symbol) - extract Adj Close data
+                                    stocks = raw_data.xs('Adj Close', level=0, axis=1)
+                                elif 'Close' in level_0_values:
+                                    # Format: (metric, symbol) - extract Close data
+                                    stocks = raw_data.xs('Close', level=0, axis=1)
+                                elif 'Adj Close' in level_1_values:
+                                    # Format: (symbol, metric) - extract Adj Close data
                                     stocks = raw_data.xs('Adj Close', level=1, axis=1)
-                                elif 'Close' in available_columns:
+                                elif 'Close' in level_1_values:
+                                    # Format: (symbol, metric) - extract Close data
                                     stocks = raw_data.xs('Close', level=1, axis=1)
                                 else:
-                                    st.error(f"No price columns found. Available columns: {list(available_columns)}")
+                                    st.error(f"No price columns found. Level 0: {list(level_0_values)}, Level 1: {list(level_1_values)}")
                                     st.stop()
                             else:
                                 # Flat columns - check if columns are stock symbols first
@@ -869,13 +875,24 @@ elif page == "Correlation Heatmap":
                             # Try to get Adj Close first, then Close
                             if isinstance(raw_data.columns, pd.MultiIndex):
                                 # Multiple stocks with MultiIndex columns
-                                available_columns = raw_data.columns.get_level_values(1).unique()
-                                if 'Adj Close' in available_columns:
+                                level_0_values = raw_data.columns.get_level_values(0).unique()
+                                level_1_values = raw_data.columns.get_level_values(1).unique()
+                                
+                                # Check if level 0 contains price columns or symbols
+                                if 'Adj Close' in level_0_values:
+                                    # Format: (metric, symbol) - extract Adj Close data
+                                    stocks = raw_data.xs('Adj Close', level=0, axis=1)
+                                elif 'Close' in level_0_values:
+                                    # Format: (metric, symbol) - extract Close data
+                                    stocks = raw_data.xs('Close', level=0, axis=1)
+                                elif 'Adj Close' in level_1_values:
+                                    # Format: (symbol, metric) - extract Adj Close data
                                     stocks = raw_data.xs('Adj Close', level=1, axis=1)
-                                elif 'Close' in available_columns:
+                                elif 'Close' in level_1_values:
+                                    # Format: (symbol, metric) - extract Close data
                                     stocks = raw_data.xs('Close', level=1, axis=1)
                                 else:
-                                    st.error(f"No price columns found. Available columns: {list(available_columns)}")
+                                    st.error(f"No price columns found. Level 0: {list(level_0_values)}, Level 1: {list(level_1_values)}")
                                     st.stop()
                             else:
                                 # Flat columns - check if columns are stock symbols
