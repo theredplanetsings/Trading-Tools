@@ -242,13 +242,14 @@ if page == "Home":
                                 # Columns are symbol names, data is the adjusted close
                                 for symbol in symbols_found:
                                     symbol_data_dict[symbol] = raw_data[symbol]
+                                st.success(f"Found {len(symbols_found)} symbols: {symbols_found}")  # Debug info
                             else:
                                 # Try traditional column names as fallback
                                 for symbol in major_indices:
                                     if symbol in raw_data.columns:
                                         symbol_data_dict[symbol] = raw_data[symbol]
                                 if not symbol_data_dict:
-                                    st.error(f"No matching symbols found. Available columns: {list(raw_data.columns)}")
+                                    st.error(f"No matching symbols found. Requested: {major_indices}, Available: {list(raw_data.columns)}")
                     except Exception as e:
                         st.error(f"Error processing multi-symbol data: {str(e)}")
                 
