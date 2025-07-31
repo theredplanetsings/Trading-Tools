@@ -126,7 +126,7 @@ The dashboard calculates key financial metrics:
 
 ## Licence
 
-This project is licensed under the MIT Licence - see the [LICENCE](LICENCE) file for details.
+Creative Commons Zero v1.0 Universal (CC0) - Public domain dedication for maximum freedom
 
 ## Author
 
