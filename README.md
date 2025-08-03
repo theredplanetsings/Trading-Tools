@@ -44,8 +44,8 @@ Trading-Tools/
 ├── riskvsreward.py          # Risk vs reward analysis script
 ├── correlationHeatMap.py    # Correlation heatmap generation script
 ├── requirements.txt         # Python dependencies
-├── README.md               # Project documentation
-└── LICENCE                 # Project licence
+├── README.md               # this file
+└── LICENCE                 # the licence
 ```
 
 ## Dependencies
