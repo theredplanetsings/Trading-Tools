@@ -100,7 +100,7 @@ Trading-Tools/
 - `StanWeinstein.py` - Stan Weinstein strategy implementation
 - `mySMAbacktesting.py` - SMA backtesting functionality
 - `requirements.txt` - Python dependencies
-- `README.md` - Documentation
+- `README.md` - self-explanatory
 
 ### Optional Files:
 - `riskvsreward.py` - Standalone risk analysis script
